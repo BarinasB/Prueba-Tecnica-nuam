@@ -5,26 +5,18 @@ import java.math.BigDecimal;
 
 public class ProductRequest {
 
-    @NotBlank(message = "Name is required")
-    @Size(min = 3, message = "Name must have at least 3 characters")
+    @NotBlank(message = "El nombre no puede estar vacío")
+    @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
     private String name;
 
+    @NotBlank(message = "La descripción no puede estar vacía")
     private String description;
 
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", inclusive = true, message = "Price must be greater than 0")
+    @NotNull(message = "El precio es obligatorio")
+    @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
     private BigDecimal price;
 
-    public ProductRequest() {}
-
-    public ProductRequest(String name, String description, BigDecimal price) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-    }
-
     // Getters y setters
-
     public String getName() {
         return name;
     }
