@@ -1,0 +1,14 @@
+### VS Code ###
+.vscode/
+
+
+# Compilado
+target/
+
+
+ temporales
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
