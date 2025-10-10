@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  sqlserver-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: >
+      /bin/bash -c "
+      /opt/mssql/bin/sqlservr &
+      sleep 20;
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password123! -Q 'IF DB_ID(N''productsdb'') IS NULL CREATE DATABASE productsdb;' ;
+       wait
+       " 
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Password123! -C -Q 'SELECT 1'" ]
+      interval: 10s      # cada cuánto hacer la prueba
+      timeout: 5s        # tiempo máximo para responder
+      retries: 10        # intenta hasta 10 veces
+      start_period: 30s  # espera inicial antes de empezar a testear
+    networks:
+      - spring-net
+
+  product-api:
+    build: .
+    container_name: product-api
+    depends_on:
+      sqlserver-db:
+        condition: service_healthy  # ✅ solo arranca cuando SQL Server pase el healthcheck
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://sqlserver-db:1433;databaseName=productsdb;encrypt=false;trustServerCertificate=true
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: Password123!
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+    networks:
+      - spring-net
+
+volumes:
+  sql_data:
+      
+
+networks:
+  spring-net:
+    driver: bridge
